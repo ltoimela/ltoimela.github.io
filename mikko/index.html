@@ -51,9 +51,11 @@
         textIx = 0
         message = []
         message.push('NÄHDÄÄN MIKKO');
-        message.push('   SEIKKAILU');
-        message.push('    ODOTTAA');
-        message.push('  JA DIGITIIMI');
+        message.push('    SEIKKAILU');
+        message.push('     ODOTTAA');
+        message.push('JA DIGITIIMI...');
+        message.push('');
+     
         text = new PIXI.Text(message[0],{fontFamily : 'Arial', fontSize: 52, fill : 0xeeffee, 
           align : 'center'});
         text.x = textParkPosition
@@ -194,7 +196,7 @@
 
           flake.y += 1e-1*ticker.elapsedMS*flake.speed;
           flake.x += -0.5 + Math.random();
-          if (flake.y > 800) {
+          if (flake.y > 600 || flake.x < 0 || flake.x > 800) {
             flake.x = getRandomInt(800);
             flake.y = 0
           }
@@ -204,7 +206,7 @@
         mikkoSprite.y = 120 + Math.sin(currentTime*5e-4*Math.PI*2.0)*15;
         mikkoSprite.x = Math.cos(currentTime*1e-4*Math.PI*2.0)*15;
         mountainSprite.x += mountainDir;
-        mountainSprite.y = -120 + Math.sin(Math.sin(currentTime*1e-4*Math.PI*2.0)*Math.PI)*70;
+        mountainSprite.y = -160 + Math.sin(Math.sin(currentTime*1e-4*Math.PI*2.0)*Math.PI)*30;
         if (mountainSprite.x > 0)
         {
           mountainDir *= -1;
