@@ -62,21 +62,23 @@
 
         flakes = []
 
-        snow_container_behind = new PIXI.ParticleContainer(50, {
+        snow_container_behind = new PIXI.ParticleContainer(150, {
                                         scale: true,
                                         position: true,
                                         alpha: true,
                                     });
-        snow_container_front = new PIXI.ParticleContainer(100, {
+        snow_container_front = new PIXI.ParticleContainer(50, {
                                         scale: true,
                                         position: true,
                                         alpha: true,
                                     });
-        for (let i = 0; i < 50; ++i)
+        for (let i = 0; i < 150; ++i)
         {
             const sprite = new PIXI.Sprite.from("assets/snow.png");
             sprite.x = getRandomInt(800);
             sprite.y = getRandomInt(600);
+            sprite.fx = 0;
+            sprite.fy = 0;
             sprite.speed = Math.random()*0.75 + 0.25
             snow_container_behind.addChild(sprite);
             flakes.push(sprite);
@@ -86,11 +88,13 @@
 
         snow_container_front = new PIXI.ParticleContainer();
         
-        for (let i = 0; i < 100; ++i)
+        for (let i = 0; i < 50; ++i)
         {
             const sprite = new PIXI.Sprite.from("assets/snow.png");
             sprite.x = getRandomInt(800);
             sprite.y = getRandomInt(600);
+            sprite.fx = 0;
+            sprite.fy = 0;
             sprite.scale.x = Math.random()+1
             sprite.scale.y = Math.random()+1
             sprite.speed = Math.random()*0.75 + 0.25
@@ -115,6 +119,13 @@
         });
 
         mountainDir = -1;
+
+        app.stage.interactive = true;
+        app.stage.pointerdown = onDragStart;
+        app.stage.pointerup = onDragEnd;
+        app.stage.pointerupoutside = onDragEnd;
+        app.stage.pointermove = onDragMove;
+        app.stage.prev_p = {x:null, y:null };
 
         requestAnimationFrame(update);
 
@@ -176,6 +187,11 @@
         for (let i = 0; i < flakes.length; i++)
         {
           const flake = flakes[i];
+          flake.y += flake.fy;
+          flake.x += flake.fx;
+          flake.fx *= 0.95;
+          flake.fy *= 0.95;
+
           flake.y += 1e-1*ticker.elapsedMS*flake.speed;
           flake.x += -0.5 + Math.random();
           if (flake.y > 800) {
@@ -199,6 +215,40 @@
         }
         app.render();
         requestAnimationFrame(update);
+      }
+
+      function onDragStart(event) {
+          this.dragging = true;
+      }
+
+      function onDragEnd(event) {
+          this.dragging = false;
+          this.prev_p.x = null
+          this.prev_p.y = null;
+      }
+
+      function onDragMove(event) {
+          if (this.dragging) {
+              const p = event.data.global;
+              if (this.prev_p.x != null)
+              {
+                const dx = p.x - this.prev_p.x;
+                const dy = p.y - this.prev_p.y;
+
+                for (let i = 0; i < flakes.length; i++)
+                {
+                  const flake = flakes[i];
+                  const dist = (flake.x - p.x)*(flake.x - p.x) + (flake.y - p.y)*(flake.y - p.y);
+                  const w = 1.0 / (1.0 + 0.01*dist)*0.5;
+                  flake.fx += dx*w;
+                  flake.fy += dy*w;
+                }
+              }
+
+              this.prev_p.x = p.x;
+              this.prev_p.y = p.y;
+
+          }
       }
     </script>
   </body>
