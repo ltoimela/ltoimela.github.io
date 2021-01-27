@@ -27,13 +27,21 @@
         // Create the application
         app = new PIXI.Application({view:document.getElementById("game-canvas"), backgroundColor:0xffffff});
 
+        use_rain = Math.random() > 0.75 ? true : false
+
         mikkoSprite = PIXI.Sprite.from('assets/mikko_256x256.png');
         mikkoSprite.x = 0;
         mikkoSprite.y = 100;
         mikkoSprite.scale.x = 2.0;
         mikkoSprite.scale.y = 2.0;
 
-        mountainSprite = PIXI.Sprite.from('assets/panorama.png');
+        if (use_rain)
+        {
+          mountainSprite = PIXI.Sprite.from('assets/panorama2.png');
+        } else 
+        {
+          mountainSprite = PIXI.Sprite.from('assets/panorama.png');          
+        }
         mountainSprite.x = 0;
         mountainSprite.y = -80;
         mountainSprite.scale.x = 10.0;
@@ -81,6 +89,10 @@
             sprite.y = getRandomInt(600);
             sprite.fx = 0;
             sprite.fy = 0;
+            if (use_rain)
+            {
+              sprite.tint = 0x3030ff;
+            }
             sprite.speed = Math.random()*0.75 + 0.25
             snow_container_behind.addChild(sprite);
             flakes.push(sprite);
@@ -97,6 +109,10 @@
             sprite.y = getRandomInt(600);
             sprite.fx = 0;
             sprite.fy = 0;
+            if (use_rain)
+            {
+              sprite.tint = 0x3030ff;
+            }
             sprite.scale.x = Math.random()+1
             sprite.scale.y = Math.random()+1
             sprite.speed = Math.random()*0.75 + 0.25
@@ -203,7 +219,9 @@
         }
 
         currentTime += ticker.elapsedMS
-        mikkoSprite.y = 120 + Math.sin(currentTime*5e-4*Math.PI*2.0)*15;
+        mikkoSprite.scale.x = 2.01 + Math.sin(currentTime*2e-4*Math.PI*2.0)*0.01;
+        mikkoSprite.scale.y = 2.01 + Math.sin(currentTime*2e-4*Math.PI*2.0)*0.01;
+        mikkoSprite.y = 110 + Math.sin(currentTime*5e-4*Math.PI*2.0)*15;
         mikkoSprite.x = Math.cos(currentTime*1e-4*Math.PI*2.0)*15;
         mountainSprite.x += mountainDir;
         mountainSprite.y = -160 + Math.sin(Math.sin(currentTime*1e-4*Math.PI*2.0)*Math.PI)*30;
