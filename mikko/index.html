@@ -22,7 +22,7 @@
       function init() {
         console.log("init() successfully called.");
 
-       PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+        PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         // Create the application
         app = new PIXI.Application({view:document.getElementById("game-canvas"), backgroundColor:0xffffff});
@@ -42,6 +42,7 @@
         {
           mountainSprite = PIXI.Sprite.from('assets/panorama.png');          
         }
+
         mountainSprite.x = 0;
         mountainSprite.y = -80;
         mountainSprite.scale.x = 10.0;
@@ -52,7 +53,7 @@
         textFrontPosition = 200
         textTimer = 0
         textTimeToFront = 1
-        textTimeAtFront = 5
+        textTimeAtFront = 2
         textTimeAtPark = 1
         textPhase = 0
 
@@ -62,14 +63,47 @@
         message.push('    SEIKKAILU');
         message.push('     ODOTTAA');
         message.push('JA DIGITIIMI...');
-        message.push('');
-     
+
+        names = ['           Anna',
+                '           Daniel',
+                '            Eero',
+                '           Filip',
+                '           Hanna',
+                '          Helianna',
+                '           Henri',
+                '           Irene',
+                '           Ismo',
+                '         Konstantin',
+                '          Lasse',
+                '          Markus',
+                '          Noora',
+                '           Osku',
+                '           Pasi',
+                '         Pauliina',
+                '           Saara',
+                '           Saila',
+                '           Ville'];
+
+        message = message.concat(names);
+
         text = new PIXI.Text(message[0],{fontFamily : 'Arial', fontSize: 52, fill : 0xeeffee, 
           align : 'center'});
         text.x = textParkPosition
 
-        app.stage.addChild(mountainSprite);
 
+        load_screen_text = new PIXI.Text('Loading...',{fontFamily : 'Arial', fontSize: 52, fill : 0xeeffee, 
+          align : 'center'});
+        load_screen_text.x=300;
+        load_screen_text.y=250;
+
+        var load_screen = new PIXI.Graphics();
+        load_screen.beginFill(0x404040);
+        load_screen.drawRect(0, 0, 800, 600);
+
+        app.stage.addChild(load_screen);
+        app.stage.addChild(load_screen_text)
+
+     
         flakes = []
 
         snow_container_behind = new PIXI.ParticleContainer(150, {
@@ -97,8 +131,6 @@
             snow_container_behind.addChild(sprite);
             flakes.push(sprite);
         }
-        app.stage.addChild(snow_container_behind);
-        app.stage.addChild(mikkoSprite);
 
         snow_container_front = new PIXI.ParticleContainer();
         
@@ -119,18 +151,26 @@
             snow_container_front.addChild(sprite);
             flakes.push(sprite);
         }
-        app.stage.addChild(snow_container_front);
-
-        app.stage.addChild(text);
 
         currentTime = 0
 
         ticker = new PIXI.Ticker();
         ticker.start();
 
+
+        sound_loaded = false;
+
+
         PIXI.sound.Sound.from({
             url: 'assets/musa.mp3',
-            autoPlay: true,
+            preload: true,
+            loaded: function(err, sound) {
+              console.log('Sound loaded...');
+              sound_loaded = true;
+              sound.play();
+              load_screen_text.x = 110;
+              load_screen_text.text = 'Click anywhere to start...'
+            },         
             complete: function() {
                 console.log('Sound finished');
             }
@@ -145,10 +185,21 @@
         app.stage.pointermove = onDragMove;
         app.stage.prev_p = {x:null, y:null };
 
+        demo_running = false;
+
+
         requestAnimationFrame(update);
 
       }
       function update() {
+
+        if (!demo_running)
+        {
+          app.render();
+          requestAnimationFrame(update);
+        
+          return;
+        }
 
         textTimer += ticker.elapsedMS*1e-3;
         text.y = 70 + Math.sin(currentTime*2e-4*Math.PI*2.0+1)*30;
@@ -238,6 +289,17 @@
       }
 
       function onDragStart(event) {
+          if (sound_loaded && !demo_running) 
+          {
+            app.stage.removeChildren();
+            app.stage.addChild(mountainSprite);        
+            app.stage.addChild(snow_container_behind);
+            app.stage.addChild(mikkoSprite);
+            app.stage.addChild(snow_container_front);
+            app.stage.addChild(text);
+
+            demo_running = true;
+          }
           this.dragging = true;
       }
 
