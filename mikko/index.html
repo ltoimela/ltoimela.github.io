@@ -15,6 +15,10 @@
       </div>
       <script>
 
+      function get_text_front_position(text)
+      {
+        return (800-text.width) / 2;
+      }
       function getRandomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
       }
@@ -60,29 +64,29 @@
         textIx = 0
         message = []
         message.push('NÄHDÄÄN MIKKO');
-        message.push('    SEIKKAILU');
-        message.push('     ODOTTAA');
+        message.push('SEIKKAILU');
+        message.push('ODOTTAA');
         message.push('JA DIGITIIMI...');
 
-        names = ['           Anna',
-                '           Daniel',
-                '            Eero',
-                '           Filip',
-                '           Hanna',
-                '          Helianna',
-                '           Henri',
-                '           Irene',
-                '           Ismo',
-                '         Konstantin',
-                '          Lasse',
-                '          Markus',
-                '          Noora',
-                '           Osku',
-                '           Pasi',
-                '         Pauliina',
-                '           Saara',
-                '           Saila',
-                '           Ville'];
+        names = ['Anna',
+                'Daniel',
+                'Eero',
+                'Filip',
+                'Hanna',
+                'Helianna',
+                'Henri',
+                'Irene',
+                'Ismo',
+                'Konstantin',
+                'Lasse',
+                'Markus',
+                'Noora',
+                'Osku',
+                'Pasi',
+                'Pauliina',
+                'Saara',
+                'Saila',
+                'Ville'];
 
         message = message.concat(names);
 
@@ -207,7 +211,7 @@
         {
           case 0: {
               text.alpha = textTimer / textTimeToFront;
-              text.x = textTimer * textFrontPosition / textTimeToFront;
+              text.x = textTimer * get_text_front_position(text) / textTimeToFront;
               if (textTimer > textTimeToFront) 
               {
                 textTimer = 0;
@@ -224,7 +228,7 @@
               break;
             }
           case 2: {
-              text.x = textFrontPosition + (textParkEndPosition - textFrontPosition) * textTimer / textTimeToFront;
+              text.x = get_text_front_position(text) + (textParkEndPosition - get_text_front_position(text)) * textTimer / textTimeToFront;
               if (textTimer > textTimeToFront) 
               {
                 textTimer = 0;
