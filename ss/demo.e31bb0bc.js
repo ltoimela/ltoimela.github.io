@@ -101245,7 +101245,8 @@ const TRIANGULATION = [127, 34, 139, 11, 0, 37, 232, 231, 120, 72, 37, 39, 128, 
 exports.TRIANGULATION = TRIANGULATION;
 const LIP_CONTOUR = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95];
 exports.LIP_CONTOUR = LIP_CONTOUR;
-const NOSE_BRIDGE = [10, 151, 9, 8, 168, 6, 197, 195, 5, 4, 1, 19, 94];
+const NOSE_BRIDGE = [10, 151, 9, 8, 168, 6, 197, 195, 5]; // 4, 1, 19,94];
+
 exports.NOSE_BRIDGE = NOSE_BRIDGE;
 const TEXTURE_MIDDLE = [65, 147];
 exports.TEXTURE_MIDDLE = TEXTURE_MIDDLE;
@@ -101293,12 +101294,30 @@ const {
 } = require('kalman-filter');
 
 const kFilterPos = new KalmanFilter({
-  observation: 2,
-  dynamic: 'constant-speed'
+  observation: {
+    sensorDimension: 2,
+    name: 'sensor'
+  },
+  dynamic: {
+    name: 'constant-position',
+    // observation.sensorDimension == dynamic.dimension
+    covariance: [3, 4] // equivalent to diag([3, 4])
+
+  }
 });
 const kFilterYDir = new KalmanFilter({
-  observation: 2,
-  dynamic: 'constant-speed'
+  observation: {
+    sensorDimension: 2,
+    timeStep: 1,
+    name: 'sensor'
+  },
+  dynamic: {
+    name: 'constant-position',
+    // observation.sensorDimension == dynamic.dimension
+    timeStep: 1,
+    covariance: [3, 4] // equivalent to diag([3, 4])
+
+  }
 });
 tfjsWasm.setWasmPaths(`https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${tfjsWasm.version_wasm}/dist/`);
 const NUM_KEYPOINTS = 468;
@@ -101533,28 +101552,36 @@ async function renderPrediction() {
 
       let dx = keypoints[206][0] - keypoints[426][0];
       let dy = keypoints[206][1] - keypoints[426][1];
-      let scaler = Math.sqrt(dx * dx + dy * dy) / 650;
+      let scaler = Math.sqrt(dx * dx + dy * dy) / 670; //650;
+
       let m10 = m;
       let m11 = 1;
       let norm = Math.sqrt(m10 * m10 + m11 * m11);
       scaler = scaler / norm;
       let smile_line_m = dy / dx;
-      let smile_line_b = keypoints[206][1] - keypoints[206][0] * smile_line_m; // x = m * y + b
-      // m*y = x - b
-      // y = x/m - b/m
-
-      let nose_line_b = -b / m;
-      let nose_line_m = 1.0 / m;
+      let smile_line_b = keypoints[206][1] - keypoints[206][0] * smile_line_m;
       ctx.beginPath();
       ctx.moveTo(0, smile_line_b);
       ctx.lineTo(512, smile_line_b + smile_line_m * 512);
-      ctx.stroke(); // Calculate intersection point
+      ctx.stroke();
+      let upper_teeth_x, upper_teeth_y; // x = m * y + b
+      // m*y = x - b
+      // y = x/m - b/m
+      // Calculate intersection point
       //sl_m * x + sl_b = m*x+b
       //slm_m * x - m*x = b - sl_b
       //x = (b-sl_b)/(sl_m-m)
 
-      let upper_teeth_x = (nose_line_b - smile_line_b) / (smile_line_m - nose_line_m);
-      let upper_teeth_y = smile_line_b + upper_teeth_x * smile_line_m;
+      if (Math.abs(m) > 1e-3) {
+        let nose_line_b = -b / m;
+        let nose_line_m = 1.0 / m;
+        upper_teeth_x = (nose_line_b - smile_line_b) / (smile_line_m - nose_line_m);
+        upper_teeth_y = smile_line_b + upper_teeth_x * smile_line_m;
+      } else {
+        upper_teeth_x = b * 1.0;
+        upper_teeth_y = smile_line_b + upper_teeth_x * smile_line_m;
+      }
+
       observation = [upper_teeth_x, upper_teeth_y];
       console.log(observation);
       pos_previous_corrected = kFilterPos.filter({
@@ -101573,8 +101600,9 @@ async function renderPrediction() {
 
       m10 = m10 * scaler;
       m11 = m11 * scaler;
-      let m00 = -m11;
-      let m01 = m10;
+      let xWiden = 1.1;
+      let m00 = -m11 * xWiden;
+      let m01 = m10 * xWiden;
       let translationX = upper_teeth_x;
       let translationY = upper_teeth_y;
       toothCtx.save();
@@ -101582,7 +101610,7 @@ async function renderPrediction() {
       toothCtx.fillRect(0, 0, toothCanvas.width, toothCanvas.height);
       toothCtx.translate(translationX, translationY);
       toothCtx.transform(m00, m01, m10, m11, 0, 0);
-      toothCtx.drawImage(upper_teeth, -220, 60);
+      toothCtx.drawImage(upper_teeth, -220, 45);
       toothCtx.restore(); //    toothCtx.fillStyle =  '#FFFFFF';
       //      toothCtx.fillRect(0,0,toothCanvas.width,toothCanvas.height);
       // Apply alpha mask to texture
