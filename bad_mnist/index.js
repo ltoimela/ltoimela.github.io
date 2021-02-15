@@ -1,8 +1,16 @@
+var video, videoWidth, videoHeight;
+var inputCanvas, canvas, ctx;
+
+const inputWidth = 28;
+const inputHeight = 28;
+
+var X;
+var badnet_mnist;
+
+var fpsCount, fpsEstimate, fpsTimer;
+
 async function setupCamera() {
     video = document.getElementById('video');
-
-    console.log(navigator);
-    console.log(navigator.mediaDevices);
 
     stream = await navigator.mediaDevices.getUserMedia({
         'audio': false,
@@ -23,7 +31,6 @@ async function setupCamera() {
 
 function updateCamera()
 {
-    ctx = canvas.getContext('2d');
     ctx.drawImage(
         video, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width, canvas.height);
 
@@ -42,6 +49,8 @@ function updateCamera()
     imageData = inputCtx.getImageData(0,0,inputWidth, inputHeight)
     imageDataArray = imageData.data;
     
+    let minVal = 1e3;
+    let maxVal = -1e3;
     for (let j = 0; j < inputHeight; ++j)
     {
         for (let i = 0; i < inputWidth; ++i)
@@ -49,21 +58,32 @@ function updateCamera()
 
             let ix = (j*inputWidth + i) * 4;
             let val = 1.0 - (imageDataArray[ix] + imageDataArray[ix+1] + imageDataArray[ix+2]) / 3 / 255.0; 
-            if (val < 0.25) 
+            if (val < minVal)
             {
-                val = 0;
+                minVal = val;
             }
-            val = val * 1.5;
-            if (val > 1) 
+            if (val > maxVal)
             {
-                val = 1;
+                maxVal = val;
             }
             X[inputWidth*j+i] = val;
-            imageDataArray[ix] = 255 * val;
-            imageDataArray[ix+1] = 255 * val;
-            imageDataArray[ix+2] = 255 * val;
         }
     }
+
+    let offset = minVal * 1.1;
+    let scaler = 1.05 / (maxVal - offset);
+
+    for (let i = 0; i < X.length; ++i)
+    {
+        let val = (X[i] - offset) * scaler;
+        if (val < 0) { val = 0; }
+        if (val > 1) { val = 1; }
+        X[i] = val;
+        imageDataArray[i*4] = 255 * val;
+        imageDataArray[i*4+1] = 255 * val;
+        imageDataArray[i*4+2] = 255 * val;
+    }
+
 
     inputCtx.putImageData(imageData, 0, 0);
     ctx.drawImage(inputCanvas, 0,0);
@@ -86,7 +106,7 @@ function updateCamera()
                 maxIx = i;
             }
         }
-        ctx.font = '14px serif';    
+
         if (maxVal > 0.6)
         {
             ctx.fillText('Guess: ' + maxIx + ' p: ' + maxVal.toFixed(2), 10, 50);
@@ -134,8 +154,9 @@ async function main()
     const canvasContainer = document.querySelector('.canvas-wrapper');
     canvasContainer.style = `width: ${videoWidth}px; height: ${videoHeight}px`;
 
-    inputWidth = 28;
-    inputHeight = 28;
+    ctx = canvas.getContext('2d');
+    ctx.font = '14px serif';    
+
     inputCanvas = document.createElement('canvas');
     inputCanvas.width = inputWidth;
     inputCanvas.height = inputHeight;
