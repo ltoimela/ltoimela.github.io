@@ -51,23 +51,19 @@ function updateCamera()
     
     let minVal = 1e3;
     let maxVal = -1e3;
-    for (let j = 0; j < inputHeight; ++j)
+    for (let i = 0; i < X.length; ++i)
     {
-        for (let i = 0; i < inputWidth; ++i)
+        let ix = i * 4;
+        let val = 1.0 - (imageDataArray[ix] + imageDataArray[ix+1] + imageDataArray[ix+2]) / 3 / 255.0; 
+        if (val < minVal)
         {
-
-            let ix = (j*inputWidth + i) * 4;
-            let val = 1.0 - (imageDataArray[ix] + imageDataArray[ix+1] + imageDataArray[ix+2]) / 3 / 255.0; 
-            if (val < minVal)
-            {
-                minVal = val;
-            }
-            if (val > maxVal)
-            {
-                maxVal = val;
-            }
-            X[inputWidth*j+i] = val;
+            minVal = val;
         }
+        if (val > maxVal)
+        {
+            maxVal = val;
+        }
+        X[i] = val;
     }
 
     let offset = minVal * 1.1;
@@ -84,11 +80,8 @@ function updateCamera()
         imageDataArray[i*4+2] = 255 * val;
     }
 
-
     inputCtx.putImageData(imageData, 0, 0);
     ctx.drawImage(inputCanvas, 0,0);
-
-  
 
     if (typeof badnet_mnist !== 'undefined')
     {
