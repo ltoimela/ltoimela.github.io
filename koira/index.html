@@ -2,10 +2,10 @@
 
   <body>
       <div align="center">
-      <input type="text" id="dog_text"  size="80">
+        Write your thoughts...
       </div>
       <div align="center">
-      <canvas id="main_canvas" width="646" height="354"/>
+          <canvas id="main_canvas" width="646" height="354"/>
       </div>
       <script>
         function wrapText(context, text, x, y, maxWidth, maxHeight, lineHeight) {
@@ -33,27 +33,34 @@
         }      
       </script>
       <script>
+        var dog_text = "";
+
         var canvas = document.getElementById('main_canvas');
         var context = canvas.getContext('2d');
         context.font = "47px Comic Sans MS";
         
-        var input = document.getElementById('dog_text');
         var dogImage = new Image();
         
-        function repaintDog()
+        function repaintDog(e)
         {
+          if (e.keyCode === 8 && dog_text.length > 0)
+          {
+            dog_text = dog_text.slice(0, -1);
+          } else 
+          {
+            dog_text += String.fromCharCode(e.keyCode);
+            console.log(dog_text);
+          }
           context.clearRect(0, 0, canvas.width, canvas.height);
           context.drawImage(dogImage, 0,0);
-//          context.fillText(input.value, 300, 62);
-          wrapText(context, input.value, 310, 70, 250, 300, 55);
+          wrapText(context, dog_text, 310, 70, 250, 300, 55);
         };
 
         dogImage.onload = repaintDog;
-        input.onkeyup = repaintDog;
-        input.onkeydown = repaintDog;
-        input.onchange = repaintDog;
+        window.addEventListener('keypress',this.repaintDog,false);
 
         dogImage.src = 'puhuva_koira.png';
+
       </script>
   </body>
 </html>
