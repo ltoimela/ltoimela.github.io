@@ -13,12 +13,12 @@
           var line = '';
 
           for(var n = 0; n < words.length; n++) {
-            var testLine = line + words[n] + ' ';
+            var testLine = n === 0 ? words[n] : line + ' ' + words[n];
             var metrics = context.measureText(testLine);
             var testWidth = metrics.width;
             if (testWidth > maxWidth && n > 0) {
               context.fillText(line, x, y);
-              line = words[n] + ' ';
+              line = words[n];
               y += lineHeight;
               if (y > maxHeight) {
                 line = "";
@@ -48,8 +48,11 @@
             dog_text = dog_text.slice(0, -1);
           } else 
           {
-            dog_text += String.fromCharCode(e.keyCode);
-            console.log(dog_text);
+            if (e.keyCode > 31)
+            {
+              dog_text += String.fromCharCode(e.keyCode);
+              console.log(dog_text);
+            }
           }
           context.clearRect(0, 0, canvas.width, canvas.height);
           context.drawImage(dogImage, 0,0);
