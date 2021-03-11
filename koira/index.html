@@ -1,0 +1,59 @@
+<html>
+
+  <body>
+      <div align="center">
+      <input type="text" id="dog_text"  size="80">
+      </div>
+      <div align="center">
+      <canvas id="main_canvas" width="646" height="354"/>
+      </div>
+      <script>
+        function wrapText(context, text, x, y, maxWidth, maxHeight, lineHeight) {
+          var words = text.split(' ');
+          var line = '';
+
+          for(var n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + ' ';
+            var metrics = context.measureText(testLine);
+            var testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+              context.fillText(line, x, y);
+              line = words[n] + ' ';
+              y += lineHeight;
+              if (y > maxHeight) {
+                line = "";
+                break;
+              }
+            }
+            else {
+              line = testLine;
+            }
+          }
+          context.fillText(line, x, y);
+        }      
+      </script>
+      <script>
+        var canvas = document.getElementById('main_canvas');
+        var context = canvas.getContext('2d');
+        context.font = "47px Comic Sans MS";
+        
+        var input = document.getElementById('dog_text');
+        var dogImage = new Image();
+        
+        function repaintDog()
+        {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(dogImage, 0,0);
+//          context.fillText(input.value, 300, 62);
+          wrapText(context, input.value, 310, 70, 250, 300, 55);
+        };
+
+        dogImage.onload = repaintDog;
+        input.onkeyup = repaintDog;
+        input.onkeydown = repaintDog;
+        input.onchange = repaintDog;
+
+        dogImage.src = 'puhuva_koira.png';
+      </script>
+  </body>
+</html>
