@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Lease Miles Estimator",
+  "name": "Calculate Lease Car Miles Left Estimate",
   "icons": [
     {
       "src": "favicon.ico",
