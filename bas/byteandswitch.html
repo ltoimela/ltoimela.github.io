@@ -1,0 +1,61 @@
+<html>
+
+<head>
+	<title>Byte and Switch</title>
+	<style type="text/css">
+@font-face{font-family:"C64 Pro Mono Local";src:url('./fonts/C64_Pro_Mono-STYLE.ttf') format("truetype")}@font-face{font-family:"C64 Pro Local";src:url('./fonts/C64_Pro_Mono-STYLE.ttf') format("truetype")}.c64pm{font:normal 24pt/32px "C64 Pro Mono Local",verdana,helvetica,sans-serif;letter-spacing:0;padding:0;margin:0}.c64p{font:normal 24pt/32px "C64 Pro Local",verdana,helvetica,sans-serif;letter-spacing:0;padding:0;margin:0}.px8{font-size:6pt;line-height:8px}.px16{font-size:12pt;line-height:16px}.px24{font-size:18pt;line-height:24px}.px32{font-size:24pt;line-height:32px}.px40{font-size:30pt;line-height:40px}table,td,tr{padding:0;margin:0}tbody,td,thead,tr{background-color:inherit}td{font:inherit;border-right:2px solid #888;border-bottom:2px solid #888}td:first-child{border-left:2px solid #888}tr:first-child td{border-top:2px solid #888}td:hover{background-color:#000!important;color:#fff!important}table{border-top:4px solid #000;border-left:4px solid #000;border-right:4px solid #000;border-bottom:4px solid #000}.d020-00{background-color:#000}.d021-00{color:#000}.d020-06{background-color:#352879}.d021-06{color:#352879}.d020-0e{background-color:#6c5eb5}.d021-0e{color:#6c5eb5}
+	</style>
+
+	</head>
+
+<body style="color:#706deb; background-color: #3e31a2;">
+
+	<div style="text-align:center;">
+		<div class="c64p px40">
+		<br/>
+		<p>BYTE AND SWITCH OY</p>
+		</div>
+		<div class="c64p px32">
+			<p  style="cursor:pointer;" id="birdText" onclick="flap(true)">
+			</p>	
+		</div>
+		<div class="c64p px32">
+			<p>Modern software development</p>
+			<p>Two decades of experience</p>
+			<p>lasse&#x0040;bas.fi</p>
+		</div>
+
+	<script>
+		var birdUp = "&#x0ee4a;&#x0ee51;&#x0ee4b;"
+		var birdDown = "&#x0ee55;&#x0ee51;&#x0ee49;"
+		var birdScared = "&#x2500;&#x0ee51;&#x2500;"
+		var up = true
+		var timer
+
+		function flap(scare = false)
+		{
+			up = !up
+
+			if (scare)
+			{
+				clearInterval(timer);
+				timer = window.setInterval(flap, 1000);
+				document.getElementById("birdText").innerHTML = birdScared
+			} else 
+			{
+				document.getElementById("birdText").innerHTML = up ? birdUp : birdDown
+			}
+		}
+
+		flap()
+		timer = window.setInterval(flap, 1000);
+
+	</script>
+	<div style="text-align: left;" class="c64p px32">
+		READY.<br/>
+		&#x2588;
+	</div>
+
+	</body>
+
+</html>
