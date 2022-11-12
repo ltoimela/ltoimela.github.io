@@ -23,7 +23,7 @@
 
 <body>
 
-<video hidden="true" id="video" width="320" height="240" muted autoplay playsinline></video>
+<video hidden="true" id="video" width="640" height="480"></video>
 <div>
     <canvas id="canvas" width="800" height="600"></canvas>
 </div>
@@ -60,8 +60,11 @@ async function open_stream()
         await create_detector()
         stream = await navigator.mediaDevices.getUserMedia({
                 audio: false,
-                video: { width: 320, height: 200 }
+                video: { width: 640, height: 480 }
             });
+        video.onloadedmetadata = function(e) {
+            video.play();
+        };
         video.srcObject = stream;
         video.onplaying = function () {
             requestAnimationFrame(update_video);
@@ -116,9 +119,7 @@ function add(vec_a, vec_b)
 
 async function estimate_faces()
 {
-    console.log('Estimate faces called...');
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0,0);
     const predictions = await model.estimateFaces(video, false);
 
     if (predictions != undefined && predictions.length > 0)
@@ -182,12 +183,7 @@ async function estimate_faces()
 function update_video()
 {
     requestAnimationFrame(update_video);
-    if (video.width == 320) 
-    {
-        estimate_faces(video);
-    }
-    
-//    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    estimate_faces(video);
 }
 
 </script>
