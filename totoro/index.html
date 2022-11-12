@@ -67,6 +67,7 @@ async function open_stream()
         };
         video.srcObject = stream;
         video.onplaying = function () {
+            console.log('Now playing...');
             requestAnimationFrame(update_video);
         }
     }
