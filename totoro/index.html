@@ -63,7 +63,9 @@ async function open_stream()
                 video: { width: 320, height: 200 }
             });
         video.srcObject = stream;
-        requestAnimationFrame(update_video);
+        video.onplaying = function () {
+            requestAnimationFrame(update_video);
+        }
     }
     catch(error) {
         alert(error.message);
