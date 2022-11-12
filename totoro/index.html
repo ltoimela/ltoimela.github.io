@@ -27,24 +27,16 @@
 <div>
     <canvas id="canvas" width="800" height="600"></canvas>
 </div>
-<!-- Require the peer dependencies of face-detection. -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+<script >
 
-<!-- You must explicitly require a TF.js backend if you're not using the TF.js union bundle. -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection"></script>
+var model;
+var video = document.querySelector("#video");
+var canvas = document.querySelector("#canvas");
 
-<script>
-
-let video = document.querySelector("#video");
-let canvas = document.querySelector("#canvas");
-
-let stream = null;
-
-let image_loaded
+var stream = null;
 
 var totoro_img = new Image();
 totoro_img.onload = function() {
@@ -54,21 +46,22 @@ totoro_img.src = 'totoro.png';
 
 
 console.log(navigator);
-const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
-const detectorConfig = {
-    runtime: 'tfjs',
-};
+
 
 async function create_detector()
 {
-    detector = await faceDetection.createDetector(model, detectorConfig);
+    model = await blazeface.load();
+    console.log(model);
 }
 
 async function open_stream()
 {
     try {
         await create_detector()
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: { width: 320, height: 200 }
+            });
         video.srcObject = stream;
         requestAnimationFrame(update_video);
     }
@@ -121,16 +114,21 @@ function add(vec_a, vec_b)
 
 async function estimate_faces()
 {
-    const estimationConfig = {flipHorizontal: true, width:320, height:200};
-    const faces = await detector.estimateFaces(video, estimationConfig);
-    if (faces != undefined && faces.length > 0)
+    if (video.width === 0) 
     {
-        let avg_rel_pos_x = (faces[0].keypoints[0].x + faces[0].keypoints[1].x)*0.5;
-        let avg_rel_pos_y = (faces[0].keypoints[0].y + faces[0].keypoints[1].y)*0.5;
+        return;
+    }
+    const predictions = await model.estimateFaces(video, false);
+    const ctx = canvas.getContext('2d');
+
+    if (predictions != undefined && predictions.length > 0)
+    {
+        const avg_pos_x = (predictions[0].landmarks[0][0] + predictions[0].landmarks[1][0]) * 0.5;
+        const avg_pos_y = (predictions[0].landmarks[0][1] + predictions[0].landmarks[1][1]) * 0.5;
         
-        avg_rel_pos_x /= 160.0; avg_rel_pos_x -= 1.0;
-        avg_rel_pos_y /= 100.0; avg_rel_pos_y -= 1.0;
-        console.log(avg_rel_pos_x + "," + avg_rel_pos_y);
+        let avg_rel_pos_x = 1.0 - avg_pos_x / video.width * 2.0;
+        let avg_rel_pos_y = avg_pos_y / video.height * 2.0 - 1.0;
+
         const ctx = canvas.getContext('2d');
         const cx = 560;
         const cy = 170;
