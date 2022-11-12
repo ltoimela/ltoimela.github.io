@@ -116,12 +116,9 @@ function add(vec_a, vec_b)
 
 async function estimate_faces()
 {
-    if (video.width === 0) 
-    {
-        return;
-    }
-    const predictions = await model.estimateFaces(video, false);
     const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0,0);
+    const predictions = await model.estimateFaces(video, false);
 
     if (predictions != undefined && predictions.length > 0)
     {
