@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Totoro</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<style type="text/css">
+
+
+#click-photo {
+    display: none;
+}
+
+
+#canvas {
+    display: block;
+    margin: 0 auto 20px auto;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<video hidden="true" id="video" width="320" height="240" autoplay></video>
+<div>
+    <canvas id="canvas" width="800" height="600"></canvas>
+</div>
+<!-- Require the peer dependencies of face-detection. -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+
+<!-- You must explicitly require a TF.js backend if you're not using the TF.js union bundle. -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection"></script>
+
+<script>
+
+let video = document.querySelector("#video");
+let canvas = document.querySelector("#canvas");
+
+let stream = null;
+
+let image_loaded
+
+var totoro_img = new Image();
+totoro_img.onload = function() {
+    open_stream();
+};
+totoro_img.src = 'totoro.png';
+
+
+console.log(navigator);
+const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
+const detectorConfig = {
+    runtime: 'tfjs',
+};
+
+async function create_detector()
+{
+    detector = await faceDetection.createDetector(model, detectorConfig);
+}
+
+async function open_stream()
+{
+    try {
+        await create_detector()
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+        requestAnimationFrame(update_video);
+    }
+    catch(error) {
+        alert(error.message);
+        return;
+    }
+}
+
+function mul(vec, scalar)
+{
+    let ans = [];
+    for (let i = 0; i < vec.length; ++i)
+    {
+        ans.push(vec[i] * scalar);
+    }
+    return ans;
+}
+function normalize(vec)
+{
+    let sum = 0.0;
+    for (let i = 0; i < vec.length; ++i)
+    {
+        sum += vec[i]*vec[i];
+    }
+    const one_per_sum = 1.0 / Math.sqrt(sum);
+    return mul(vec, one_per_sum);
+}
+function sub(vec_a, vec_b)
+{
+    let ans = [];
+    for (let i = 0; i < vec_a.length; ++i)
+    {
+        ans.push(vec_a[i] - vec_b[i]);
+    }
+    
+    return ans;
+}
+function add(vec_a, vec_b)
+{
+    let ans = [];
+    for (let i = 0; i < vec_a.length; ++i)
+    {
+        ans.push(vec_a[i] + vec_b[i]);
+    }
+    
+    return ans;
+}
+
+
+async function estimate_faces()
+{
+    const estimationConfig = {flipHorizontal: true, width:320, height:200};
+    const faces = await detector.estimateFaces(video, estimationConfig);
+    if (faces != undefined && faces.length > 0)
+    {
+        let avg_rel_pos_x = (faces[0].keypoints[0].x + faces[0].keypoints[1].x)*0.5;
+        let avg_rel_pos_y = (faces[0].keypoints[0].y + faces[0].keypoints[1].y)*0.5;
+        
+        avg_rel_pos_x /= 160.0; avg_rel_pos_x -= 1.0;
+        avg_rel_pos_y /= 100.0; avg_rel_pos_y -= 1.0;
+        console.log(avg_rel_pos_x + "," + avg_rel_pos_y);
+        const ctx = canvas.getContext('2d');
+        const cx = 560;
+        const cy = 170;
+        const eye_radius = 30;
+        ctx.drawImage(totoro_img, 0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#003300';
+        ctx.fillStyle = '#2f2f2f';
+
+
+        let left_eye_center_pos = [52, 0.0, 0];
+        let right_eye_center_pos = [-52, 0.0, 0];
+        let user_pos = [avg_rel_pos_x*200, avg_rel_pos_y*200, 300];
+        let left_eye_look_at_dir = normalize(sub(user_pos, left_eye_center_pos));
+        let right_eye_look_at_dir = normalize(sub(user_pos, right_eye_center_pos));
+
+        let left_pupil_pos = add(left_eye_center_pos, mul(left_eye_look_at_dir, 10.0));
+        let right_pupil_pos = add(right_eye_center_pos, mul(right_eye_look_at_dir, 10.0));
+
+        const left_eye_pupil_diameter = Math.max(3, 6 * (1.0 - Math.abs(left_eye_look_at_dir[0])));
+        const right_eye_pupil_diameter = Math.max(3, 6 * (1.0 - Math.abs(right_eye_look_at_dir[0])));
+
+        // console.log('user_pos', user_pos)
+        // console.log('left pupil pos: ', left_pupil_pos);
+        // console.log(cx + left_pupil_pos[0], ' and ' , cy + left_pupil_pos[1]);
+        
+        // ctx.beginPath();
+        // ctx.arc(cx + left_eye_center_pos[0],
+        //         cy + left_eye_center_pos[1], 
+        //         20, 0, 2 * Math.PI);
+        // ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx + left_pupil_pos[0],
+                cy + left_pupil_pos[1], 
+                left_eye_pupil_diameter, 10, 0,
+                0, 2 * Math.PI);
+        ctx.fill();
+        // ctx.beginPath();
+        // ctx.arc(cx + right_eye_center_pos[0],
+        //         cy + right_eye_center_pos[1], 
+        //         20, 0, 2 * Math.PI);
+        // ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx + right_pupil_pos[0],
+                cy + right_pupil_pos[1], 
+                right_eye_pupil_diameter, 10,0,
+                0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+function update_video()
+{
+    requestAnimationFrame(update_video);
+    if (video.width == 320) 
+    {
+        estimate_faces(video);
+    }
+    
+//    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+</script>
+
+</body>
+</html>
