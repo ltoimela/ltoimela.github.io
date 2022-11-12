@@ -116,6 +116,7 @@ function add(vec_a, vec_b)
 
 async function estimate_faces()
 {
+    console.log('Estimate faces called...');
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0,0);
     const predictions = await model.estimateFaces(video, false);
